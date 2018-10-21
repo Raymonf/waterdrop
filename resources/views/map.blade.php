@@ -1,9 +1,6 @@
 @extends('layouts.app')
 
 @section('header')
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-          crossorigin=""/>
     <style>
         #map {
             height: calc(100vh - 55px);
@@ -12,27 +9,175 @@
             padding-top: 0 !important;
             padding-bottom: 0 !important;
         }
+        .epic-popup{
+            max-width: 300px;
+            max-height: 2.5em;
+            text-align: center;
+        }
     </style>
+
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
 @endsection
 
-@section('content')
+
+@section('basic_content')
     <div id="map"></div>
 @endsection
 
 @section('footer')
-    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
-            integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
-            crossorigin=""></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
     <script>
-        var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            osmAttrib = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            osm = L.tileLayer(osmUrl, {maxZoom: 18, attribution: osmAttrib});
+        mapboxgl.accessToken = '{{ config('app.mapbox_key') }}';
+        var map = new mapboxgl.Map({
+            container: 'map', // container id
+            style: 'mapbox://styles/mapbox/satellite-streets-v9', // stylesheet location
+            center: [-95.7129, 37.0902], // starting position [lng, lat]
+            zoom: 2 // starting zoom
+        });
 
-        var map = L.map('map').setView([51.505, -0.159], 15).addLayer(osm);
+        let inciFires = [
+            @foreach($inciWebData as $i=>$fire)
+            {!! json_encode($fire) !!} {{ $i != count($inciWebData) - 1 ? ',' : '' }} {{--$fire['long'] . ', ' . $fire['lat']--}}
+            @endforeach
+        ];
 
-        L.marker([51.504, -0.159])
-            .addTo(map)
-            .bindPopup('A pretty CSS3 popup.<br />Easily customizable.')
-            .openPopup();
+        // First, checks if it isn't implemented yet.
+        // https://stackoverflow.com/a/4673436
+        if (!String.format) {
+            String.format = function(format) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                return format.replace(/{(\d+)}/g, function(match, number) {
+                    return typeof args[number] != 'undefined'
+                        ? args[number]
+                        : match
+                        ;
+                });
+            };
+        }
+
+        let markerHeight = 50, markerRadius = 10, linearOffset = 25;
+        let popupOffsets = {
+            'top': [0, 0],
+            'top-left': [0,0],
+            'top-right': [0,0],
+            'bottom': [0, -markerHeight],
+            'bottom-left': [linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
+            'bottom-right': [-linearOffset, (markerHeight - markerRadius + linearOffset) * -1],
+            'left': [markerRadius, (markerHeight - markerRadius) * -1],
+            'right': [-markerRadius, (markerHeight - markerRadius) * -1]
+        };
+
+        inciFires.forEach(function(element){
+            let newMarker = new mapboxgl.Marker()
+                .setLngLat([element['long'], element['lat']])
+                .addTo(map);
+
+            newMarker.setPopup(new mapboxgl.Popup({offset: popupOffsets, className: element['title']})
+                .setLngLat([element['long'], element['lat']])
+                .setHTML(String.format("<div class='epic-popup'><a href='{0}'><h5>{1}</h3></a><p>{2}</p></div>", element['link'], element['title'], element['geoname']))
+                .addTo(map)
+            ).togglePopup();
+        });
+
+        map.on('load', function() {
+            map.addSource('fires', {
+                type: 'geojson',
+                data: "{{ asset('json/trees.geojson') }}"
+            });
+
+            // add heatmap layer here
+            map.addLayer({
+                id: 'fires-heat',
+                type: 'heatmap',
+                source: 'fires',
+                maxzoom: 15,
+                paint: {
+                    // increase weight as diameter breast height increases
+                    'heatmap-weight': {
+                        property: 'dbh',
+                        type: 'exponential',
+                        stops: [
+                            [1, 0],
+                            [62, 1]
+                        ]
+                    },
+                    // increase intensity as zoom level increases
+                    'heatmap-intensity': {
+                        stops: [
+                            [11, 1],
+                            [15, 3]
+                        ]
+                    },
+                    // assign color values be applied to points depending on their density
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0, 'rgba(236,0,0,0)',
+                        0.2, 'rgb(208,0,0)',
+                        0.4, 'rgb(195,0,0)',
+                        0.6, 'rgb(180,0,0)',
+                        0.8, 'rgb(166,0,0)'
+                    ],
+                    // increase radius as zoom increases
+                    'heatmap-radius': {
+                        stops: [
+                            [11, 15],
+                            [15, 20]
+                        ]
+                    },
+                    // decrease opacity to transition into the circle layer
+                    'heatmap-opacity': {
+                        default: 1,
+                        stops: [
+                            [14, 1],
+                            [15, 0]
+                        ]
+                    },
+                }
+            }, 'waterway-label');
+
+            // add circle layer here
+            map.addLayer({
+                id: 'fires-point',
+                type: 'circle',
+                source: 'fires',
+                minzoom: 14,
+                paint: {
+                    // increase the radius of the circle as the zoom level and dbh value increases
+                    'circle-radius': {
+                        property: 'dbh',
+                        type: 'exponential',
+                        stops: [
+                            [{ zoom: 15, value: 1 }, 5],
+                            [{ zoom: 15, value: 62 }, 10],
+                            [{ zoom: 22, value: 1 }, 20],
+                            [{ zoom: 22, value: 62 }, 50],
+                        ]
+                    },
+                    'circle-color': {
+                        property: 'dbh',
+                        type: 'exponential',
+                        stops: [
+                            [0, 'rgba(236,0,0,0)'],
+                            [10, 'rgb(236,0,0)'],
+                            [20, 'rgb(208,0,0)'],
+                            [30, 'rgb(166,0,0)'],
+                            [40, 'rgb(150,0,0)'],
+                            [50, 'rgb(128,0,0)'],
+                            [60, 'rgb(103,0,0)']
+                        ]
+                    },
+                    'circle-stroke-color': 'white',
+                    'circle-stroke-width': 1,
+                    'circle-opacity': {
+                        stops: [
+                            [14, 0],
+                            [15, 1]
+                        ]
+                    }
+                }
+            }, 'waterway-label');
+        });
     </script>
 @endsection

@@ -55,7 +55,7 @@ class InciWebCacher implements ShouldQueue
             if (str_contains($item->title, ' (Wildfire)')) {
                 $title = str_replace(' (Wildfire)', '', (string) $item->title);
                 $geoRes = json_decode($this->getGeoName((string) $geo->lat, (string) $geo->long));
-                $geoName = $geoRes->success ? $geoRes->name : null;
+                $geoName = $geoRes !== false && $geoRes != null && $geoRes->success ? $geoRes->name : null;
 
                 $fires[] = [
                     'title' => $title,
@@ -70,7 +70,7 @@ class InciWebCacher implements ShouldQueue
             }
         }
 
-        Cache::put('fires', $fires, 60);
+        Cache::put('fires', $fires, 10);
 
         $this->response = $fires;
     }

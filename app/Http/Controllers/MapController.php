@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\InciWebCacher;
-use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
-class ListController extends Controller
+class MapController extends Controller
 {
     public function index()
     {
@@ -18,8 +17,6 @@ class ListController extends Controller
             $inciWebData = Cache::get('fires');
         }
 
-        $crowdsourced = Report::with('votes')->latest()->get();
-
-        return view('list', compact('inciWebData', 'crowdsourced'));
+        return view('map', compact('inciWebData'));
     }
 }

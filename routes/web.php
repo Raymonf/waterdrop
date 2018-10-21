@@ -11,12 +11,15 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'HomeController@index');
 
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/list', 'ListController@index');
-Route::view('/map', 'map');
+Route::get('/map', 'MapController@index');
+Route::get('/report', 'ReportController@index');
+Route::post('/report', 'ReportController@store');
+Route::post('/lookup/{long}/{lat}', 'LookupController@lookup');
+Route::post('/vote/{type}', 'VoteController@vote');
+Route::get('/image/{report}', 'ReportController@image');
