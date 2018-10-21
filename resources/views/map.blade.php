@@ -50,7 +50,7 @@
 
         let crowdsourced = [
             @foreach($crowdsourced as $i=>$fire)
-            {!! json_encode($fire->only(['location', 'lat', 'long'])) !!},
+            {!! json_encode($fire->only(['id', 'location', 'lat', 'long'])) !!},
             @endforeach
         ];
 
@@ -99,7 +99,7 @@
 
             newMarker.setPopup(new mapboxgl.Popup({offset: popupOffsets, className: element['title']})
                 .setLngLat([element['long'], element['lat']])
-                .setHTML(String.format("<div class='epic-popup'><p>User Report</p><p><a href='{1}'>{0}</a></p></div>", element['location'], '/'))
+                .setHTML(String.format("<div class='epic-popup'><p>User Report</p><p><a href='#' data-remote='/image/{1}' data-type='image' data-toggle='lightbox'>{0}</a></p></div>", element['location'], element['id']))
                 .addTo(map)
             ).togglePopup();
         });
@@ -123,7 +123,7 @@
                         type: 'exponential',
                         stops: [
                             [1, 0],
-                            [62, 1]
+                            [16, 1]
                         ]
                     },
                     // increase intensity as zoom level increases
