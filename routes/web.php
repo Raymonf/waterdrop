@@ -23,3 +23,6 @@ Route::post('/report', 'ReportController@store');
 Route::post('/lookup/{long}/{lat}', 'LookupController@lookup');
 Route::post('/vote/{type}', 'VoteController@vote');
 Route::get('/image/{report}', 'ReportController@image');
+Route::post('/subscribe/{location}/{token}', 'SubscriptionController@subscribe');
+
+Route::get('/heatmap', 'MapController@heatmap');

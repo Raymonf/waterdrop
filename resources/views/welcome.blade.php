@@ -50,11 +50,32 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h4 class="mb-4">Fire Notifications</h4>
-                        <p class="text-muted">Coming soon...</p>
-                        <p class="mb-0"><a href="/subscribe" class="btn btn-outline-primary disabled">Register &rsaquo;</a></p>
+                        <p class="text-muted">Get notified about a potential fire</p>
+                        <p class="mb-0"><a href="#" class="btn btn-outline-primary" id="register-notification">Register &rsaquo;</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+@endsection
+
+
+@section('footer')
+    <script>
+        async function permission()
+        {
+            const messaging = firebase.messaging();
+            await messaging.requestPermission();
+            const token = await messaging.getToken();
+
+            axios.post('/subscribe/all/' + encodeURIComponent(token))
+                .then(function() {
+                    alert('You have successfully been subscribed to notifications!');
+                })
+                .catch(function () {
+                    alert('Unable to subscribe');
+                });
+        }
+        document.getElementById('register-notification').onclick = permission;
+    </script>
 @endsection

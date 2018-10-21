@@ -11,8 +11,10 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
+                        <p class="text-center mb-4">Logging in allows you to vote on crowdsourced data.</p>
+
                         <div class="form-group row">
-                            <label for="email" class="col-sm-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
+                            <label for="email" class="col-sm-4 col-form-label text-md-right">{{ __('Email') }}</label>
 
                             <div class="col-md-6">
                                 <input id="email" type="email" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" name="email" value="{{ old('email') }}" required autofocus>

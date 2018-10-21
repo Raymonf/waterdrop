@@ -17,6 +17,7 @@ return [
     'lookup_url' => env('LOOKUP_URL', 'http://127.0.0.1:3000'),
     'mapbox_key' => env('MAPBOX_KEY', ''),
     'algolia_key' => env('ALGOLIA_KEY', ''),
+    'fcm_key' => env('FCM_SERVER_KEY', ''),
 
     /*
     |--------------------------------------------------------------------------

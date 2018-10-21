@@ -92,6 +92,25 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyAwQ7Epsat1kXgQ7qYEgXgFIi3_Ynhwqg4",
+            authDomain: "waterdrop-4a375.firebaseapp.com",
+            databaseURL: "https://waterdrop-4a375.firebaseio.com",
+            projectId: "waterdrop-4a375",
+            storageBucket: "",
+            messagingSenderId: "305673488941"
+        };
+        firebase.initializeApp(config);
+
+        navigator.serviceWorker
+            .register('/notification-sw.js')
+            .then((registration) => {
+                firebase.messaging().useServiceWorker(registration);
+            });
+    </script>
 
     @yield('basic_content')
 

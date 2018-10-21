@@ -15,6 +15,18 @@
         <form method="post" enctype="multipart/form-data">
             {{ csrf_field() }}
 
+            @if ($errors->has('lat'))
+                <span class="text-danger" role="alert">
+                    <strong>{{ $errors->first('lat') }}</strong>
+                </span>
+            @endif
+
+            @if ($errors->has('long'))
+                <span class="text-danger" role="alert">
+                    <strong>{{ $errors->first('long') }}</strong>
+                </span>
+            @endif
+
             <div class="form-group mb-2">
                 <label for="city"><strong>Location of Wildfire</strong></label>
                 <p><button class="btn btn-outline-primary" type="button" id="useCurrentLocation">Use Current Location</button></p>
@@ -25,6 +37,9 @@
                     </span>
                 @endif
             </div>
+
+            <input type="hidden" name="lat" id="lat" value="">
+            <input type="hidden" name="long" id="long" value="">
 
             <label for="photo" class="mt-4"><strong>Upload Photo of Wildfire</strong></label>
             <div class="form-group">
@@ -57,7 +72,9 @@
 
             axios.post('/lookup/' + crd.latitude + '/' + crd.longitude)
                 .then((response) => {
-                    console.log('Setting value to ' + response.data.name)
+                    document.getElementById('lat').value = crd.latitude;
+                    document.getElementById('long').value = crd.longitude;
+                    console.log('Setting value to ' + response.data.name);
                     document.getElementById('city').value = response.data.name;
                 })
                 .catch(function (error) {
@@ -85,6 +102,11 @@
                         return suggestion.name + ", " + suggestion.county + ", " + suggestion.administrative;
                     }
                 }
+            });
+
+            placesAutocomplete.on('change', function(res) {
+                document.getElementById('lat').value = res.suggestion.latlng.lat;
+                document.getElementById('long').value = res.suggestion.latlng.lng;
             });
         })();
     </script>

@@ -8,7 +8,7 @@
     <div class="container">
         <h4>Crowdsourced Fires</h4>
         <p>Possible fires, designed to alert citizens quickly</p>
-        <table class="table table-responsive w-100 d-block d-md-table mb-5">
+        <table class="table table-responsive w-100 d-block d-md-table">
             <thead>
             <tr>
                 <th scope="col">Location</th>
@@ -40,7 +40,9 @@
             </tbody>
         </table>
 
-        <h4>InciWeb Fires</h4>
+        {{ $crowdsourced->render() }}
+
+        <h4 class="mt-5">InciWeb Fires</h4>
         <p>Confirmed wildfires with detailed reports available</p>
         <table class="table table-responsive w-100 d-block d-md-table">
             <thead>

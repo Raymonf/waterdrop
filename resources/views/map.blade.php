@@ -26,6 +26,13 @@
 
 @section('footer')
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js"></script>
+    <script>
+        $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+            event.preventDefault();
+            $(this).ekkoLightbox();
+        });
+    </script>
     <script>
         mapboxgl.accessToken = '{{ config('app.mapbox_key') }}';
         var map = new mapboxgl.Map({
@@ -37,7 +44,13 @@
 
         let inciFires = [
             @foreach($inciWebData as $i=>$fire)
-            {!! json_encode($fire) !!} {{ $i != count($inciWebData) - 1 ? ',' : '' }} {{--$fire['long'] . ', ' . $fire['lat']--}}
+            {!! json_encode(collect($fire)->only(['title', 'date', 'lat', 'long', 'geoname', 'link'])) !!} {{ $i != count($inciWebData) - 1 ? ',' : '' }} {{--$fire['long'] . ', ' . $fire['lat']--}}
+            @endforeach
+        ];
+
+        let crowdsourced = [
+            @foreach($crowdsourced as $i=>$fire)
+            {!! json_encode($fire->only(['location', 'lat', 'long'])) !!},
             @endforeach
         ];
 
@@ -74,7 +87,19 @@
 
             newMarker.setPopup(new mapboxgl.Popup({offset: popupOffsets, className: element['title']})
                 .setLngLat([element['long'], element['lat']])
-                .setHTML(String.format("<div class='epic-popup'><a href='{0}'><h5>{1}</h3></a><p>{2}</p></div>", element['link'], element['title'], element['geoname']))
+                .setHTML(String.format("<div class='epic-popup'><a href='{0}'><h5>{1}</h5></a><p>{2}</p></div>", element['link'], element['title'], element['geoname']))
+                .addTo(map)
+            ).togglePopup();
+        });
+
+        crowdsourced.forEach(function(element){
+            let newMarker = new mapboxgl.Marker({color: 'red'})
+                .setLngLat([element['long'], element['lat']])
+                .addTo(map);
+
+            newMarker.setPopup(new mapboxgl.Popup({offset: popupOffsets, className: element['title']})
+                .setLngLat([element['long'], element['lat']])
+                .setHTML(String.format("<div class='epic-popup'><p>User Report</p><p><a href='{1}'>{0}</a></p></div>", element['location'], '/'))
                 .addTo(map)
             ).togglePopup();
         });
@@ -82,7 +107,7 @@
         map.on('load', function() {
             map.addSource('fires', {
                 type: 'geojson',
-                data: "{{ asset('json/trees.geojson') }}"
+                data: "/heatmap"
             });
 
             // add heatmap layer here

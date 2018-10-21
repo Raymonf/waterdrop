@@ -18,7 +18,7 @@ class ListController extends Controller
             $inciWebData = Cache::get('fires');
         }
 
-        $crowdsourced = Report::with('votes')->latest()->get();
+        $crowdsourced = Report::with('votes')->latest()->paginate(20);
 
         return view('list', compact('inciWebData', 'crowdsourced'));
     }
